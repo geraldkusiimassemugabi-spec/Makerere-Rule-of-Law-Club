@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule of Law Quiz — Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; text-align: right; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  .btn-restart {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px 36px;
+    font-size: 12px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-restart:hover { background: #1a003a; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="big-title">Rule of Law<br>Quiz</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>How well do you know the Constitution of Uganda, your legal rights, and the principles of the rule of law?</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+      <button class="btn-restart" onclick="restartQuiz()">TRY AGAIN</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Under Article 23(4) of the Uganda Constitution, within how many hours must an arrested person be brought before a court?",
+    options: ["24 hours", "48 hours", "72 hours", "7 days"],
+    answer: 1,
+    explanation: "Article 23(4) requires production before a court within 48 hours of arrest. If this is not done, the person must be released unconditionally or on bail."
+  },
+  {
+    q: "Which Latin phrase is the motto of the Rule of Law Club of Makerere?",
+    options: ["Fiat justitia", "In lege Speramus", "Lex est rex", "Nemo judex"],
+    answer: 1,
+    explanation: "\"In lege Speramus\" means \"In law we trust\" — the founding motto of the Rule of Law Club of Makerere."
+  },
+  {
+    q: "What does the principle of \"nemo judex in causa sua\" mean?",
+    options: ["No one is above the law", "No one shall be a judge in their own cause", "The law must be obeyed", "Ignorance of the law is no excuse"],
+    answer: 1,
+    explanation: "\"Nemo judex in causa sua\" is a fundamental rule of natural justice: no one should be a judge in a matter in which they have a personal interest."
+  },
+  {
+    q: "Article 44 of the Uganda Constitution lists rights that are non-derogable. What does non-derogable mean?",
+    options: ["They can be limited by Parliament", "They can be suspended during emergencies", "They cannot be suspended or limited under any circumstances", "They apply only to citizens"],
+    answer: 2,
+    explanation: "Non-derogable rights are absolute. They cannot be suspended, limited, or taken away under any circumstances — not even during a state of emergency."
+  },
+  {
+    q: "Which of the following is NOT one of the three core principles of the rule of law?",
+    options: ["Equality before the law", "Supremacy of the law", "Majority rule", "Legal certainty"],
+    answer: 2,
+    explanation: "The three core principles are: supremacy of the law, equality before the law, and legal certainty. Majority rule is a democratic principle — related to the rule of law, but distinct from it."
+  },
+  {
+    q: "Under the Uganda Constitution, which Article guarantees freedom of expression, including freedom of the press?",
+    options: ["Article 20", "Article 25", "Article 29", "Article 35"],
+    answer: 2,
+    explanation: "Article 29(1)(a) of the Constitution guarantees freedom of speech and expression, including freedom of the press and other media."
+  },
+  {
+    q: "What is habeas corpus?",
+    options: [
+      "A court order requiring a person to appear as a witness",
+      "A legal remedy requiring a detained person to be brought before a court to determine if their detention is lawful",
+      "A formal charge sheet issued by the DPP",
+      "A warrant authorising a search of premises"
+    ],
+    answer: 1,
+    explanation: "Habeas corpus (\"you shall have the body\") is a fundamental remedy protecting against unlawful detention. It requires a detained person to be brought before a court to examine whether their imprisonment is lawful."
+  },
+  {
+    q: "In AG v Uganda Law Society (Constitutional Appeal No. 1 of 2006), what did the Supreme Court say about military courts?",
+    options: [
+      "Military courts have unlimited jurisdiction over civilians",
+      "Military courts must be manned by persons professionally trained to perform judicial functions",
+      "Civilians can never be tried in military courts",
+      "Military courts are exempt from constitutional oversight"
+    ],
+    answer: 1,
+    explanation: "The Supreme Court held that military courts must be manned by persons professionally trained to perform judicial functions and accorded the protections and privileges of all other judicial officers."
+  },
+  {
+    q: "Article 28(1) of the Uganda Constitution guarantees the right to a fair hearing. Which of the following is NOT a component of that right?",
+    options: ["A speedy hearing", "A public hearing", "An anonymous judge", "An independent and impartial tribunal"],
+    answer: 2,
+    explanation: "Article 28(1) guarantees a fair, speedy, and public hearing before an independent and impartial court. Anonymity of the judge is not a component — judicial independence requires that judges be known and accountable."
+  },
+  {
+    q: "Which body is vested with regulatory authority over broadcasting in Uganda under the UCC Act?",
+    options: ["The Ministry of ICT", "The Uganda Broadcasting Council", "The Uganda Communications Commission", "The Uganda Police Force"],
+    answer: 2,
+    explanation: "The Uganda Communications Commission (UCC), established by Parliament, is the statutory body vested with regulatory authority over broadcasting and electronic communications. It alone sets out the grounds for licensing and suspension."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Perfect score. The bench awaits you.",
+    9: "Outstanding. You clearly read the Constitution.",
+    8: "Excellent. A sharp legal mind at work.",
+    7: "Solid. A few provisions to revisit.",
+    6: "Getting there. Keep reading.",
+    5: "Halfway there. The library is your friend.",
+    0: "The library is open. In lege Speramus."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+
+function restartQuiz() {
+  current = 0;
+  score = 0;
+  answered = false;
+  results = [];
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('quizScreen').classList.remove('hide');
+  loadQuestion();
+}
+</script>
+</body>
+</html>
