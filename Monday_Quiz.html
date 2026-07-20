@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule of Law Quiz - Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; text-align: right; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="big-title">Rule of Law<br>Quiz</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>How well do you know the Constitution of Uganda, your legal rights, and the principles of the rule of law?</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "A statute says a tribunal's decisions \"shall not be called into question in any court of law.\" The tribunal decides a case after asking itself entirely the wrong legal question, one it had no power to consider. Can a court still review it?",
+    options: [
+      "No, the ouster clause is absolute",
+      "Only if the clause is silent on jurisdictional errors specifically",
+      "Yes, a decision made outside the tribunal's authority is not a real \"determination,\" so the clause does not protect it",
+      "No, unless the tribunal agrees to reconsider"
+    ],
+    answer: 2,
+    explanation: "Ouster clauses do not protect decisions tainted by jurisdictional error. A decision made outside the decision-maker's authority is not a lawful determination at all, so there is nothing for the clause to shield."
+  },
+  {
+    q: "Which case gave us the standard that a decision can be quashed only if it is \"so unreasonable that no reasonable authority could ever have come to it\"?",
+    options: [
+      "Associated Provincial Picture Houses v Wednesbury Corporation",
+      "Anisminic Ltd v Foreign Compensation Commission",
+      "Council of Civil Service Unions v Minister for the Civil Service",
+      "Ridge v Baldwin"
+    ],
+    answer: 0,
+    explanation: "Wednesbury (1948) set this deliberately high bar. Anisminic deals with ouster clauses, the GCHQ case restated the general grounds of judicial review, and Ridge v Baldwin is a leading natural justice case, all genuinely close, but each answers a different question."
+  },
+  {
+    q: "Once a decision-maker has finally decided a matter, what stops it from later changing its mind without an appeal?",
+    options: ["Res judicata", "Stare decisis", "Audi alteram partem", "Functus officio"],
+    answer: 3,
+    explanation: "Functus officio: once a decision-maker has finally acted, it loses authority over that matter. Res judicata is related but concerns whether the same issue can be re-litigated, not the decision-maker's own power to revisit it."
+  },
+  {
+    q: "What is the term for a person or organisation that is not a party to a case, but is permitted to submit legal argument or expertise to assist the court in reaching its decision?",
+    options: ["Amicus curiae", "Intervener", "Next friend", "Guardian ad litem"],
+    answer: 0,
+    explanation: "An amicus curiae, literally \"friend of the court,\" offers relevant expertise, information, or argument without becoming a party. An intervener typically joins the case as a party with a direct interest in the outcome, while a next friend or guardian ad litem represents the interests of a minor or person under a legal disability, a different role entirely."
+  },
+  {
+    q: "After the Supreme Court ruled that the General Court Martial could not try civilians, Parliament amended the UPDF Act to list specific \"exceptional circumstances\" under which a civilian can still be tried by a court martial. Which of the following is NOT one of the exceptional circumstances the amendment introduced?",
+    options: [
+      "Being found in unlawful possession of military equipment, classified stores, or uniforms",
+      "Voluntarily accompanying the Defence Forces on active service",
+      "Aiding or abetting a service member in a serious crime such as murder, treason, or aggravated robbery",
+      "Publicly criticising a decision or policy of the Defence Forces"
+    ],
+    answer: 3,
+    explanation: "The UPDF (Amendment) Act, 2025 introduced section 117A, setting out exceptional circumstances under which civilians may be tried by court martial: unlawful possession of military equipment, classified stores, or uniforms; voluntarily accompanying the Defence Forces on active service; and aiding or abetting service members in serious crimes such as murder, treason, or aggravated robbery. Publicly criticising the Defence Forces is not among them."
+  },
+  {
+    q: "A journalist publishes an article discussing the likely guilt of a person whose criminal trial is currently ongoing. What legal doctrine is most directly at risk of being violated?",
+    options: ["Res judicata", "The sub judice rule", "Ejusdem generis", "The doctrine of laches"],
+    answer: 1,
+    explanation: "The sub judice rule restricts public commentary on matters still before a court, to avoid prejudicing an ongoing case or influencing the tribunal or jury. Publishing commentary on a pending trial's likely outcome risks contempt of court."
+  },
+  {
+    q: "Which of the following is generally NOT one of the questions a court asks when applying the doctrine of proportionality to a restriction on a right?",
+    options: [
+      "Is the objective important enough to justify limiting the right?",
+      "Did the decision-maker personally believe the measure was fair?",
+      "Is the measure rationally connected to that objective?",
+      "Was a less restrictive measure available?"
+    ],
+    answer: 1,
+    explanation: "Proportionality asks whether the objective is important enough, whether the measure is rationally connected to it, whether a less restrictive option existed, and whether a fair balance is struck. The decision-maker's personal belief in the measure's fairness is not part of the test, proportionality is assessed objectively."
+  },
+  {
+    q: "What is the doctrine called that generally requires a party to use an available internal appeal before going to court for judicial review?",
+    options: [
+      "The doctrine of ripeness",
+      "The doctrine of primary jurisdiction",
+      "The doctrine of exhaustion of administrative remedies",
+      "The doctrine of mootness"
+    ],
+    answer: 2,
+    explanation: "Exhaustion of administrative remedies requires a party to pursue and complete an available internal appeal before seeking judicial intervention. Ripeness asks whether a dispute is developed enough for a court to decide, primary jurisdiction concerns deferring first to a specialised agency on technical matters within its expertise, and mootness asks whether a live controversy still exists, all closely related but distinct limits on when a court will hear a case."
+  },
+  {
+    q: "Uganda's 1995 Constitution came into force. What happened to laws that already existed and were never expressly repealed?",
+    options: [
+      "Existing law continues, but must be read with whatever modifications are needed to bring it into conformity with the Constitution",
+      "Existing law continues, but only Acts passed by the pre-1995 Parliament survive, not statutory instruments made under them",
+      "Existing law continues only if re-gazetted by the Attorney General within five years of the Constitution coming into force",
+      "Existing law continues in force exactly as written, even where it conflicts with the Constitution, until Parliament repeals it"
+    ],
+    answer: 0,
+    explanation: "Existing law is not automatically swept away by the Constitution coming into force. It continues in operation but must be construed with the modifications, adaptations, and qualifications necessary to bring it into conformity with the Constitution, this applies to statutory instruments as much as Acts, and there is no re-gazetting requirement or grace period for conflicting provisions."
+  },
+  {
+    q: "A newspaper criticises a judge's ruling in a case that concluded last week. Separately, in a case still ongoing, someone tells a magistrate to their face that they intend to ignore whatever order the court makes. Which of these is contempt of court?",
+    options: [
+      "Only the newspaper article",
+      "Both, automatically",
+      "Neither, since criminal contempt no longer exists",
+      "Only the open defiance"
+    ],
+    answer: 3,
+    explanation: "Contempt aimed at interfering with a pending matter is most clearly engaged where the case is still live, as with open defiance before a magistrate. Commentary on a case that has already concluded may raise other issues, but the core sub judice concern, prejudicing an active case, is not engaged once the matter has ended."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
