@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rule of Law Quiz - Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; text-align: right; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+  .question-image { display: flex; justify-content: center; margin: -8px 0 24px 0; }
+  .figure-card {
+    width: 180px; background: #fff; border: 2px solid #2D0060; border-radius: 6px;
+    padding: 14px 12px 12px 12px; text-align: center; box-shadow: 2px 2px 0 #B8880A;
+  }
+  .figure-card svg { width: 100px; height: 100px; }
+  .figure-card .figure-label {
+    font-size: 10px; letter-spacing: 1.5px; color: #B8880A; font-weight: bold;
+    margin-top: 8px; font-family: Arial, sans-serif;
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .options.image-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .option.image-card {
+    flex-direction: column; align-items: center; text-align: center;
+    padding: 14px 8px 10px 8px; gap: 6px;
+  }
+  .option.image-card .avatar-wrap { width: 64px; height: 64px; }
+  .option.image-card .avatar-wrap svg { width: 100%; height: 100%; }
+  .option.image-card .card-name {
+    font-size: 13px; font-family: Georgia, serif; color: #333; margin-top: 2px;
+  }
+  .option.image-card .dot { position: absolute; margin-left: 44px; margin-top: -18px; }
+  .option.image-card { position: relative; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="big-title">Rule of Law<br>Quiz</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>How well do you know the Constitution of Uganda, your legal rights, and the principles of the rule of law?</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="question-image" id="questionImage" style="display:none;"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Between 1986 and the first elections held under the 1995 Constitution, which body served as Uganda's legislature?",
+    options: ["The Uganda People's Congress caucus", "The Constituent Assembly", "The National Resistance Council", "The Interim Electoral Commission"],
+    answer: 2,
+    explanation: "The National Resistance Council, established in 1986, served as Uganda's legislature until it was replaced by an elected National Assembly following the 1995 Constitution and the 1996 general elections."
+  },
+  {
+    q: "A victim is shot and taken to hospital, where negligent medical treatment contributes to their death. For the chain of causation from the shooting to be broken, English courts have held that the medical treatment must be:",
+    options: [
+      "Falling short of the standard expected of a reasonably competent doctor",
+      "So independent of the original injury that it renders that injury insignificant to the outcome",
+      "Administered without first obtaining the victim's informed consent",
+      "Given outside the hospital's normal operating hours"
+    ],
+    answer: 1,
+    explanation: "Courts have held that negligent medical treatment breaks the chain of causation only where it is so independent of the defendant's original act, and so potent in causing death, that the original act's contribution becomes insignificant. Ordinary negligence, a treatment delay, or the seniority of the treating doctor do not, on their own, meet this threshold."
+  },
+  {
+    q: "Under Article 223 of the Constitution, for how long does the Inspector General of Government hold office, and how many times may they be reappointed?",
+    options: [
+      "Four years, eligible for reappointment only once",
+      "Five years, eligible for unlimited reappointment",
+      "Four years, not eligible for reappointment at all",
+      "Seven years, eligible for reappointment only once"
+    ],
+    answer: 0,
+    explanation: "The Inspector General of Government holds office for a term of four years and is eligible for reappointment only once, a deliberately limited tenure for an office tasked with checking corruption and abuse of public office."
+  },
+  {
+    q: "The \"field of play\" doctrine, developed through CAS jurisprudence, holds that a referee's decision on a factual matter during a match cannot be reviewed except in cases of what?",
+    options: [
+      "Any disagreement with the outcome by an affected party",
+      "A subsequent change in the rules of the sport",
+      "A formal protest lodged within 24 hours",
+      "Bad faith, malice, arbitrariness, or fraud"
+    ],
+    answer: 3,
+    explanation: "The field of play doctrine holds that a referee's factual, on-field judgment calls are final and not subject to review, except in the narrow circumstance of bad faith, malice, arbitrariness, or fraud. Mere disagreement with the outcome, a later rule change, or a protest filed afterward does not meet that threshold."
+  },
+  {
+    q: "A defendant negligently injures a claimant who, unknown to the defendant, has an unusually thin skull, causing far more serious harm than an ordinary person would have suffered. Under the \"eggshell skull rule,\" what is the effect on the defendant's liability?",
+    options: [
+      "Liability is capped at the harm an ordinary, healthy claimant would have suffered",
+      "The defendant must take the claimant as found, and is liable for the full extent of the actual harm caused",
+      "Liability only arises if the defendant knew of the claimant's vulnerability beforehand",
+      "Liability is shared equally between the defendant and the claimant regardless of fault"
+    ],
+    answer: 1,
+    explanation: "The eggshell skull rule holds that a defendant must take their victim as they find them. Where negligence causes harm, the defendant is liable for the full extent of that harm, even if it is far more severe than could have been anticipated because of the claimant's particular vulnerability, and even without prior knowledge of that vulnerability."
+  },
+  {
+    q: "Under Article 120(6) of the Constitution, when the Director of Public Prosecutions decides whether to institute or discontinue criminal proceedings, whose direction or control is that decision subject to?",
+    options: ["The Attorney General", "The Chief Justice", "The President", "No person or authority"],
+    answer: 3,
+    explanation: "Article 120(6) provides that in exercising these functions, the Director of Public Prosecutions shall not be subject to the direction or control of any person or authority, a deliberate guarantee of prosecutorial independence, mirroring the language used elsewhere in the Constitution for other independent bodies such as the Electoral Commission and the Human Rights Commission."
+  },
+  {
+    q: "The 1994 Constituent Assembly that drafted the 1995 Constitution had 284 members in total. How were most of them actually selected?",
+    options: [
+      "214 were directly elected, with the remaining seats distributed among parties, districts, the army, and other interest groups",
+      "All 284 were nominated directly by the incumbent government",
+      "All 284 were elected directly by universal adult suffrage",
+      "70 were directly elected, with the remaining seats reserved for political parties and the army"
+    ],
+    answer: 0,
+    explanation: "Of the 284 delegates, 214 were directly elected, while the remaining 70 seats were allocated to registered political parties, one female representative per district, and representatives of the army, youth, trade unions, and persons with disabilities."
+  },
+  {
+    q: "A spectator at a cricket match is struck by a ball hit into the crowd and sues the club. The club argues the spectator accepted the risk of injury simply by attending. What is this defence called?",
+    options: ["Ex turpi causa non oritur actio", "Novus actus interveniens", "Res ipsa loquitur", "Volenti non fit injuria"],
+    answer: 3,
+    explanation: "Volenti non fit injuria, meaning to a willing person no injury is done, is the defence that a claimant who freely accepted a known risk cannot recover for the harm that risk materialised into. Ex turpi causa concerns claims arising from the claimant's own illegal conduct, novus actus interveniens concerns breaking a chain of causation, and res ipsa loquitur concerns inferring negligence from the facts alone."
+  },
+  {
+    q: "Donoghue v Stevenson is famous for establishing which foundational principle in the law of negligence?",
+    options: ["Vicarious liability", "Contributory negligence", "The neighbour principle", "The eggshell skull rule"],
+    answer: 2,
+    explanation: "Donoghue v Stevenson (1932) established the neighbour principle: that a person must take reasonable care to avoid acts or omissions likely to injure those so closely and directly affected that they ought reasonably to be in contemplation as being affected. This became the foundation of the modern law of negligence."
+  },
+  {
+    q: "Equity operates through a set of guiding maxims rather than rigid rules. Which maxim holds that a claimant seeking an equitable remedy must not themselves be guilty of misconduct connected to the dispute?",
+    options: [
+      "Delay defeats equity",
+      "He who comes to equity must come with clean hands",
+      "Equity will not suffer a wrong without a remedy",
+      "Equity looks on that as done which ought to have been done"
+    ],
+    answer: 1,
+    explanation: "\"He who comes to equity must come with clean hands\" is the maxim barring a claimant who has engaged in misconduct related to the dispute from obtaining an equitable remedy. \"Delay defeats equity\" concerns unreasonable delay in bringing a claim, \"equity will not suffer a wrong without a remedy\" reflects equity's willingness to fashion new remedies, and \"equity looks on that as done which ought to have been done\" underlies remedies like specific performance, none of which turn on the claimant's own conduct."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  const imgBox = document.getElementById('questionImage');
+  if (q.image) {
+    imgBox.innerHTML = q.image;
+    imgBox.style.display = 'flex';
+  } else {
+    imgBox.innerHTML = '';
+    imgBox.style.display = 'none';
+  }
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  container.className = 'options';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
