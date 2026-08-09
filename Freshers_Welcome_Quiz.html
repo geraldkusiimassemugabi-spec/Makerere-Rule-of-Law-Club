@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Freshers' Welcome Quiz - Rule of Law Club of Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; text-align: right; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+  .question-image { display: flex; justify-content: center; margin: -8px 0 24px 0; }
+  .figure-card {
+    width: 180px; background: #fff; border: 2px solid #2D0060; border-radius: 6px;
+    padding: 14px 12px 12px 12px; text-align: center; box-shadow: 2px 2px 0 #B8880A;
+  }
+  .figure-card svg { width: 100px; height: 100px; }
+  .figure-card .figure-label {
+    font-size: 10px; letter-spacing: 1.5px; color: #B8880A; font-weight: bold;
+    margin-top: 8px; font-family: Arial, sans-serif;
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .options.image-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .option.image-card {
+    flex-direction: column; align-items: center; text-align: center;
+    padding: 14px 8px 10px 8px; gap: 6px;
+  }
+  .option.image-card .avatar-wrap { width: 64px; height: 64px; }
+  .option.image-card .avatar-wrap svg { width: 100%; height: 100%; }
+  .option.image-card .card-name {
+    font-size: 13px; font-family: Georgia, serif; color: #333; margin-top: 2px;
+  }
+  .option.image-card .dot { position: absolute; margin-left: 44px; margin-top: -18px; }
+  .option.image-card { position: relative; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE PRESENTS</div>
+      <div class="big-title">Welcome to<br>Law School.</div>
+      <div class="sub">A Freshers' Welcome Edition &middot; In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>You've just started a degree built on things like this quiz. Ten foundational questions, the kind that show up across your first year, Legal Systems, Constitutional Law, Contract, and Criminal Law. Basic, but not easy. Let's see where you're starting from.</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="question-image" id="questionImage" style="display:none;"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Sealed by King John of England in 1215, which document is widely credited with the early idea that even the monarch is not above the law?",
+    options: ["Magna Carta", "The Bill of Rights 1689", "The Petition of Right", "The Treaty of Westphalia"],
+    answer: 0,
+    explanation: "Magna Carta, sealed in 1215, is celebrated for establishing early principles that the sovereign's power was not absolute and that free men could not be punished except by lawful judgment, ideas that influenced the later development of due process and the rule of law."
+  },
+  {
+    q: "Under the Judicature Act, English common law and doctrines of equity apply in Uganda subject to which limitation?",
+    options: [
+      "They apply without any limitation whatsoever",
+      "Only so far as the circumstances of Uganda and its inhabitants permit",
+      "Only in cases involving foreign nationals",
+      "Only where Parliament has separately re-enacted them"
+    ],
+    answer: 1,
+    explanation: "The Judicature Act provides for the reception of English common law and doctrines of equity into Uganda, but only so far as the circumstances of Uganda and its inhabitants permit, and subject to the Constitution and other written law."
+  },
+  {
+    q: "Under the doctrine of judicial precedent, a decision of the Supreme Court on a point of law is:",
+    options: [
+      "Merely persuasive on the High Court, which may freely depart from it",
+      "Binding only on the parties to that specific case, and no one else",
+      "Binding on all lower courts in Uganda",
+      "Binding only if the President assents to the judgment"
+    ],
+    answer: 2,
+    explanation: "As the final appellate court, the Supreme Court sits at the top of Uganda's court hierarchy, and its decisions on points of law bind all lower courts under the doctrine of stare decisis."
+  },
+  {
+    q: "Which of the following is NOT one of the essential elements required to form a legally binding contract?",
+    options: ["Offer and acceptance", "Consideration", "Intention to create legal relations", "Notarisation by a Commissioner for Oaths"],
+    answer: 3,
+    explanation: "A valid contract generally requires offer and acceptance, consideration, and an intention to create legal relations. Notarisation is required for certain specific documents, but it is not a general requirement for the formation of a contract."
+  },
+  {
+    q: "For most criminal offences, the prosecution must generally prove two elements together. What are they called?",
+    options: ["Actus reus and mens rea", "Ratio decidendi and obiter dicta", "Offer and acceptance", "Locus standi and ripeness"],
+    answer: 0,
+    explanation: "Actus reus, the guilty act, and mens rea, the guilty mind, are the two elements the prosecution must generally prove to exist together for a criminal conviction, save in the case of strict liability offences."
+  },
+  {
+    q: "The doctrine of separation of powers divides state authority among which three arms of government?",
+    options: ["The President, Cabinet, and Parliament", "The Legislature, the Executive, and the Judiciary", "The Police, the Army, and the Courts", "Central Government, Local Government, and Parliament"],
+    answer: 1,
+    explanation: "Separation of powers divides state authority between the Legislature, which makes laws, the Executive, which implements them, and the Judiciary, which interprets and applies them, so that no single arm holds unchecked power."
+  },
+  {
+    q: "What is generally regarded as the key difference between a common law legal system and a civil law legal system?",
+    options: [
+      "Civil law systems have no courts of appeal",
+      "Common law systems do not recognise written statutes at all",
+      "Common law systems rely heavily on judicial precedent, while civil law systems rely mainly on comprehensive codes",
+      "Civil law systems do not permit legal representation in court"
+    ],
+    answer: 2,
+    explanation: "Common law systems developed through accumulated judicial decisions, with precedent playing the central role in how the law develops. Civil law systems, descended from Roman law, treat comprehensive written codes as the primary source of law."
+  },
+  {
+    q: "Under Article 28(3)(a) of the Constitution, a person charged with a criminal offence has the right to be presumed innocent until:",
+    options: ["The police complete their investigation", "The DPP confirms the charge", "Bail is denied", "Proved guilty, or until that person has pleaded guilty"],
+    answer: 3,
+    explanation: "Article 28(3)(a) guarantees that a person charged with a criminal offence shall be presumed innocent until proved guilty, or until that person has pleaded guilty."
+  },
+  {
+    q: "For a local custom to be recognised and enforced as a source of law in Uganda, it must generally satisfy which condition, among others?",
+    options: [
+      "It must not be repugnant to natural justice, equity, and good conscience",
+      "It must be reduced to writing and gazetted by Parliament",
+      "It must be practised by at least half the population of the district",
+      "It must have been recognised by a colonial-era court before 1900"
+    ],
+    answer: 0,
+    explanation: "Customary law is recognised as a source of law in Uganda provided it is not repugnant to natural justice, equity, and good conscience, and is not inconsistent with any written law, a limitation carried over from the colonial period and preserved in Uganda's post-independence legal system."
+  },
+  {
+    q: "Uganda's court structure is hierarchical, meaning each level's decisions can generally be appealed to the one above it. Starting from the Magistrates Courts, what is the correct order going upward?",
+    options: [
+      "Magistrates Courts, Court of Appeal, High Court, Supreme Court",
+      "Magistrates Courts, High Court, Court of Appeal, Supreme Court",
+      "High Court, Magistrates Courts, Supreme Court, Court of Appeal",
+      "Magistrates Courts, High Court, Supreme Court, Court of Appeal"
+    ],
+    answer: 1,
+    explanation: "Uganda's court hierarchy runs from the Magistrates Courts, up to the High Court, then the Court of Appeal (which also sits as the Constitutional Court), and finally the Supreme Court as the final appellate court."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  const imgBox = document.getElementById('questionImage');
+  if (q.image) {
+    imgBox.innerHTML = q.image;
+    imgBox.style.display = 'flex';
+  } else {
+    imgBox.innerHTML = '';
+    imgBox.style.display = 'none';
+  }
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  container.className = 'options';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
