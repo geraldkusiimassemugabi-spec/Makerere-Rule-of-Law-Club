@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Quiz - Rule of Law Club of Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; text-align: right; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+  .question-image { display: flex; justify-content: center; margin: -8px 0 24px 0; }
+  .figure-card {
+    width: 180px; background: #fff; border: 2px solid #2D0060; border-radius: 6px;
+    padding: 14px 12px 12px 12px; text-align: center; box-shadow: 2px 2px 0 #B8880A;
+  }
+  .figure-card svg { width: 100px; height: 100px; }
+  .figure-card .figure-label {
+    font-size: 10px; letter-spacing: 1.5px; color: #B8880A; font-weight: bold;
+    margin-top: 8px; font-family: Arial, sans-serif;
+  }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .options.image-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .option.image-card {
+    flex-direction: column; align-items: center; text-align: center;
+    padding: 14px 8px 10px 8px; gap: 6px;
+  }
+  .option.image-card .avatar-wrap { width: 64px; height: 64px; }
+  .option.image-card .avatar-wrap svg { width: 100%; height: 100%; }
+  .option.image-card .card-name {
+    font-size: 13px; font-family: Georgia, serif; color: #333; margin-top: 2px;
+  }
+  .option.image-card .dot { position: absolute; margin-left: 44px; margin-top: -18px; }
+  .option.image-card { position: relative; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE PRESENTS</div>
+      <div class="big-title">This Week's<br>Legal Quiz.</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>Ten questions this week, drawn from Constitutional Law, Contract, Tort, and public international law, plus a run through the Ugandan cases that shaped how those doctrines actually get applied at home. Sharpen your pencils.</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="question-image" id="questionImage" style="display:none;"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Which Article of the 1995 Constitution guarantees the independence of the judiciary, providing that courts shall not be subject to the control or direction of any person or authority?",
+    options: ["Article 128", "Article 126", "Article 137", "Article 146"],
+    answer: 0,
+    explanation: "Article 128 provides that in the exercise of judicial power, the courts shall be independent and shall not be subject to the control or direction of any person or authority, and that no person or authority shall interfere with courts or judicial officers in their judicial functions."
+  },
+  {
+    q: "The Human Rights (Enforcement) Act, 2019 was passed to give effect to which constitutional provision?",
+    options: ["Article 28(1)", "Article 50(4)", "Article 44", "Article 137"],
+    answer: 1,
+    explanation: "Article 50(4) of the Constitution requires Parliament to make laws for the enforcement of the rights and freedoms under Chapter Four. The Human Rights (Enforcement) Act, 2019, assented to in March 2019, was enacted to operationalise this provision by setting out the procedure for enforcing those rights."
+  },
+  {
+    q: "In Kiiza Besigye v Museveni and the Electoral Commission (2001), the Supreme Court held that a petitioner challenging a presidential election must prove that non-compliance with electoral law affected the result in which manner?",
+    options: ["A decisive manner", "A material manner", "A substantial manner", "A demonstrable manner"],
+    answer: 2,
+    explanation: "The Supreme Court held that it was not proved to its satisfaction that the failure to comply with the Presidential Elections Act affected the result of the election in a substantial manner. This substantial manner standard, later described by Odoki CJ as requiring a very high standard of proof, has since guided how Ugandan courts assess election petitions."
+  },
+  {
+    q: "Under Section 10 of the Contracts Act, 2010, a contract must be in writing if its subject matter exceeds a set value in currency points, or if it is a contract of what specific type, regardless of value?",
+    options: ["Sale of goods", "Employment", "Partnership", "Guarantee or indemnity"],
+    answer: 3,
+    explanation: "Section 10 of the Contracts Act, 2010 provides that a contract whose subject matter exceeds twenty five currency points must be in writing, and separately requires that a contract of guarantee or indemnity be in writing regardless of its value."
+  },
+  {
+    q: "Uganda's current Constitution was promulgated, coming into force, on which date?",
+    options: ["8 October 1995", "22 September 1995", "9 October 1995", "8 October 1996"],
+    answer: 0,
+    explanation: "The Constituent Assembly adopted the Constitution on 22 September 1995, but it was promulgated and came into force on 8 October 1995, making it Uganda's fourth constitution since independence."
+  },
+  {
+    q: "In Carlill v Carbolic Smoke Ball Co, the Court of Appeal held that a newspaper advertisement promising a reward could constitute a valid offer to the whole world, accepted by:",
+    options: ["Signing a written agreement", "Performing the stated conditions", "Sending a formal letter of acceptance", "Paying a deposit in advance"],
+    answer: 1,
+    explanation: "The court held that the advertisement was a unilateral offer to the world, and that Mrs Carlill accepted it simply by performing the conditions it set out, using the smoke ball as directed, without needing to communicate her acceptance to the company beforehand."
+  },
+  {
+    q: "The rule in Rylands v Fletcher imposes strict liability for damage caused by the escape of a dangerous thing, where the defendant's use of the land was:",
+    options: ["Unlicensed", "Unreasonable", "Non-natural", "Unforeseeable"],
+    answer: 2,
+    explanation: "The House of Lords held that a person who brings something onto their land likely to do mischief if it escapes must keep it in at their peril, provided the use of the land was non-natural, as with the artificially constructed reservoir in that case."
+  },
+  {
+    q: "Which Latin maxim expresses the natural justice principle that no person should be condemned without a fair hearing?",
+    options: ["Res judicata", "Volenti non fit injuria", "Caveat emptor", "Audi alteram partem"],
+    answer: 3,
+    explanation: "Audi alteram partem, meaning hear the other side, is one of the two core principles of natural justice. It requires that a person be given a fair opportunity to respond before any adverse decision is made against them."
+  },
+  {
+    q: "The African Charter on Human and Peoples' Rights, also known as the Banjul Charter, was adopted by the OAU in 1981 and entered into force in which year?",
+    options: ["1986", "1981", "1983", "1990"],
+    answer: 0,
+    explanation: "The Charter was adopted in Nairobi on 27 June 1981 but only entered into force on 21 October 1986, once the required number of ratifications had been deposited. That date is now marked as African Human Rights Day."
+  },
+  {
+    q: "In Attorney General v Major General David Tinyefuza, the Supreme Court clarified that the Constitutional Court's jurisdiction under Article 137 is confined to matters that:",
+    options: ["Involve a serving member of the armed forces", "Require interpretation of a provision of the Constitution", "Have first been heard by the High Court", "Concern a fundamental right listed in Chapter Four only"],
+    answer: 1,
+    explanation: "The Supreme Court held that the Constitutional Court's jurisdiction is exclusively derived from Article 137, meaning a petition must show on its face that interpretation of a constitutional provision is genuinely required. This principle was later applied and reaffirmed in cases such as Ismail Serugo v KCC and Attorney General."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  const imgBox = document.getElementById('questionImage');
+  if (q.image) {
+    imgBox.innerHTML = q.image;
+    imgBox.style.display = 'flex';
+  } else {
+    imgBox.innerHTML = '';
+    imgBox.style.display = 'none';
+  }
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  container.className = 'options';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
