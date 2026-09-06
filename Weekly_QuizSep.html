@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Quiz - Rule of Law Club of Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right { text-align: right; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; }
+  .timer-wrap { margin-top: 6px; text-align: right; }
+  .timer-label { font-size: 8px; color: rgba(255,255,255,0.5); letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 2px; }
+  .timer {
+    font-size: 22px; font-weight: bold; color: white; font-family: Arial, sans-serif;
+    background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;
+    letter-spacing: 1px; display: inline-block; border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .timer.low { color: white; background: #d32f2f; border-color: #d32f2f; animation: pulseTimer 1s infinite; }
+  @keyframes pulseTimer { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+
+  /* Forfeit screen */
+  .forfeit { display: none; }
+  .forfeit.show { display: block; }
+  .forfeit-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .forfeit-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .forfeit-header .title { font-size: 24px; color: white; font-weight: bold; }
+  .forfeit-body { padding: 36px 32px; text-align: center; }
+  .forfeit-body p { font-size: 14px; color: #444; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE PRESENTS</div>
+      <div class="big-title">This Week's<br>Quiz.</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>Ten questions covering constitutional law, statute, case law, history, and doctrine. You have 2 minutes once you begin, and the quiz ends if you leave this screen before finishing.</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+        <div class="timer-wrap">
+          <div class="timer-label">TIME LEFT</div>
+          <div class="timer" id="timerDisplay">2:00</div>
+        </div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- FORFEIT -->
+  <div class="forfeit" id="forfeit">
+    <div class="forfeit-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="title" id="forfeitTitle">Quiz Forfeited</div>
+    </div>
+    <div class="forfeit-body">
+      <p id="forfeitText">You left the quiz before finishing, so this attempt has ended. Reload the page to try again from question one.</p>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Article 152 of the Constitution provides that no tax shall be imposed except under the authority of what?",
+    options: ["An Act of Parliament", "A directive from the Ministry of Finance", "A resolution of Cabinet", "A decision of the Uganda Revenue Authority"],
+    answer: 0,
+    explanation: "Article 152(1) provides that no tax shall be imposed except under the authority of an Act of Parliament. It also requires that anyone empowered to waive or vary a tax must report periodically to Parliament on the exercise of that power."
+  },
+  {
+    q: "Which section of the Evidence Act provides for the admissibility of a dying declaration made by a person as to the cause of their death?",
+    options: ["Section 20", "Section 30", "Section 40", "Section 50"],
+    answer: 1,
+    explanation: "Section 30 of the Evidence Act (Cap 8) provides that a statement made by a person as to the cause of their death, or the circumstances of the transaction resulting in it, is relevant and admissible, provided it was made under a consciousness of impending death."
+  },
+  {
+    q: "Under the Advocates Act, which body determines whether an applicant is a fit and proper person to be enrolled as an advocate, and issues the certificate of eligibility?",
+    options: ["The Uganda Law Society", "The Judicial Service Commission", "The Law Council", "The Chief Registrar of the High Court"],
+    answer: 2,
+    explanation: "Under the Advocates Act, an eligible applicant applies to the Law Council, which, if satisfied that the applicant is fit and proper to be an advocate, issues a certificate to that effect. The Law Council is chaired by a judge and includes the President of the Uganda Law Society and the Director of the Law Development Centre among its members."
+  },
+  {
+    q: "In Attorney General v Kabaziguruka (2025), the Supreme Court held that the General Court Martial lacked jurisdiction to try civilians, finding provisions of the UPDF Act in contravention of Articles 28(1) and 44(c) because the court martial was not:",
+    options: ["Properly constituted under the Constitution", "Established by an Act of Parliament", "Presided over by a legally qualified judge", "Independent and impartial"],
+    answer: 3,
+    explanation: "In its January 2025 ruling, the Supreme Court held that sections 2 and 179 of the UPDF Act, which subjected civilians to trial by military courts, contravened Articles 28(1) and 44(c), because the General Court Martial was neither independent nor impartial, given how its members were appointed and their lack of security of tenure."
+  },
+  {
+    q: "In Ismail Serugo v Kampala City Council & Attorney General, the Supreme Court held that the Constitutional Court lacked jurisdiction over the petition mainly because:",
+    options: ["The petition did not require interpretation of a constitutional provision", "The petitioner had no locus standi", "The petition was filed out of time", "The respondents enjoyed sovereign immunity"],
+    answer: 0,
+    explanation: "The Supreme Court held that the Constitutional Court's jurisdiction under Article 137 is confined to petitions that genuinely require interpretation of the Constitution. Where a petition does not raise such a question on its face, the Constitutional Court has no jurisdiction to entertain it."
+  },
+  {
+    q: "Uganda's first direct presidential election under the 1995 Constitution, held on 9 May 1996 and won by Yoweri Museveni, was conducted under which political system?",
+    options: ["A multiparty system", "The Movement, or \"no-party,\" system", "A one-party state system", "An interim military-appointed system"],
+    answer: 1,
+    explanation: "The 1996 election was held under the Movement, or no-party, system formalised by the 1995 Constitution, under which candidates ran as individuals rather than on party tickets, though party affiliations still shaped campaigning. Museveni won with about 74 percent of the vote against Paul Ssemogerere."
+  },
+  {
+    q: "Which maxim holds that a person to whom power has been delegated cannot, in turn, delegate that power to someone else without express authorisation?",
+    options: ["Ultra vires", "Functus officio", "Delegatus non potest delegare", "Res judicata"],
+    answer: 2,
+    explanation: "Delegatus non potest delegare means a delegate cannot further delegate. Where a higher authority confers a power on a person or body, that recipient generally cannot pass the power on again unless the original delegation expressly or impliedly allows it."
+  },
+  {
+    q: "In Pepper v Hart (1993), the House of Lords held that courts may depart from the traditional exclusionary rule and consult which source, in limited circumstances, to resolve an ambiguous statute?",
+    options: ["The explanatory memorandum accompanying the Bill", "The report of the parliamentary committee that reviewed the Bill", "Academic commentary on the statute's drafting history", "Hansard, the official record of parliamentary debates"],
+    answer: 3,
+    explanation: "The House of Lords held that where legislation is ambiguous or obscure, courts may refer to Hansard, provided the material relied on is a clear statement by a minister or promoter of the Bill that directly addresses the point in question. This departed from the previous rule that treated any use of Hansard as a breach of parliamentary privilege."
+  },
+  {
+    q: "In R v Dudley and Stephens (1884), the Queen's Bench Division held that necessity could not be used as a defence to a charge of:",
+    options: ["Murder", "Manslaughter", "Larceny", "Piracy"],
+    answer: 0,
+    explanation: "Shipwrecked sailors killed and ate a weaker crew member to survive after weeks adrift without food. The court held that necessity, however extreme the circumstances, is not a defence to murder, and that the sanctity of life could not be weighed against the sailors' own survival."
+  },
+  {
+    q: "The African Court on Human and Peoples' Rights was established by a Protocol to the African Charter adopted in Ouagadougou, Burkina Faso, in which year?",
+    options: ["1986", "1998", "2004", "1981"],
+    answer: 1,
+    explanation: "The Protocol establishing the African Court was adopted by the OAU in Ouagadougou on 9 June 1998, though it only entered into force in January 2004 once ratified by fifteen states. Uganda is among the states that have ratified it."
+  }
+];
+
+const TOTAL_SECONDS = 120;
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+let timeLeft = TOTAL_SECONDS;
+let timerInterval = null;
+let quizActive = false;
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  quizActive = true;
+  startTimer();
+  loadQuestion();
+
+  document.addEventListener('visibilitychange', handleLeave);
+  window.addEventListener('pagehide', handleLeave);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      forfeitQuiz("Time's Up", "The 2 minute timer ran out before you finished. Reload the page to try again from question one.");
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  el.classList.toggle('low', timeLeft <= 30);
+}
+
+function handleLeave() {
+  if (quizActive && document.hidden) {
+    forfeitQuiz("Quiz Forfeited", "You left the quiz before finishing, so this attempt has ended. Reload the page to try again from question one.");
+  }
+}
+
+function handleBeforeUnload(e) {
+  if (quizActive) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+}
+
+function forfeitQuiz(title, text) {
+  if (!quizActive) return;
+  quizActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('forfeitTitle').textContent = title;
+  document.getElementById('forfeitText').textContent = text;
+  document.getElementById('forfeit').classList.add('show');
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  container.className = 'options';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  quizActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
