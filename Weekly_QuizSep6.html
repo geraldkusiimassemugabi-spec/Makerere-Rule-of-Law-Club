@@ -40,8 +40,15 @@
   .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
   .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
   .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; }
-  .timer { font-size: 13px; color: white; font-family: Arial, sans-serif; margin-top: 4px; letter-spacing: 1px; }
-  .timer.low { color: #ff8a80; font-weight: bold; }
+  .timer-wrap { margin-top: 6px; text-align: right; }
+  .timer-label { font-size: 8px; color: rgba(255,255,255,0.5); letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 2px; }
+  .timer {
+    font-size: 22px; font-weight: bold; color: white; font-family: Arial, sans-serif;
+    background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;
+    letter-spacing: 1px; display: inline-block; border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .timer.low { color: white; background: #d32f2f; border-color: #d32f2f; animation: pulseTimer 1s infinite; }
+  @keyframes pulseTimer { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
   /* Progress */
   .progress-bar { height: 3px; background: #F3EBF9; }
@@ -186,7 +193,7 @@
       <div class="sub">In lege Speramus</div>
     </div>
     <div class="intro-body">
-      <p>Ten questions covering constitutional law, statute, case law, history, and doctrine. You have 3 minutes once you begin, and the quiz ends if you leave this screen before finishing.</p>
+      <p>Ten questions covering constitutional law, statute, case law, history, and doctrine. You have 2 minutes once you begin, and the quiz ends if you leave this screen before finishing.</p>
       <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
       <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
     </div>
@@ -206,7 +213,10 @@
       <div class="header-right">
         <div class="count" id="qCount">1<span>/10</span></div>
         <div class="score-label" id="scoreLabel">0 CORRECT</div>
-        <div class="timer" id="timerDisplay">3:00</div>
+        <div class="timer-wrap">
+          <div class="timer-label">TIME LEFT</div>
+          <div class="timer" id="timerDisplay">2:00</div>
+        </div>
       </div>
     </div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
@@ -331,7 +341,7 @@ const questions = [
   }
 ];
 
-const TOTAL_SECONDS = 180;
+const TOTAL_SECONDS = 120;
 let current = 0;
 let score = 0;
 let answered = false;
@@ -359,7 +369,7 @@ function startTimer() {
     updateTimerDisplay();
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
-      forfeitQuiz("Time's Up", "The 3 minute timer ran out before you finished. Reload the page to try again from question one.");
+      forfeitQuiz("Time's Up", "The 2 minute timer ran out before you finished. Reload the page to try again from question one.");
     }
   }, 1000);
 }
