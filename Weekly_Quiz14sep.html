@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Quiz - Rule of Law Club of Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right { text-align: right; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; }
+
+  .timer-wrap { margin-top: 6px; text-align: right; }
+  .timer-label { font-size: 8px; color: rgba(255,255,255,0.5); letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 2px; }
+  .timer {
+    font-size: 22px; font-weight: bold; color: white; font-family: Arial, sans-serif;
+    background: rgba(255,255,255,0.15); padding: 4px 12px; border-radius: 20px;
+    letter-spacing: 1px; display: inline-block; border: 1.5px solid rgba(255,255,255,0.3);
+  }
+  .timer.low { color: white; background: #d32f2f; border-color: #d32f2f; animation: pulseTimer 1s infinite; }
+  @keyframes pulseTimer { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body p { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+
+  /* Forfeit screen */
+  .forfeit { display: none; }
+  .forfeit.show { display: block; }
+  .forfeit-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .forfeit-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .forfeit-header .title { font-size: 24px; color: white; font-weight: bold; }
+  .forfeit-body { padding: 36px 32px; text-align: center; }
+  .forfeit-body p { font-size: 14px; color: #444; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div style="font-size:10px;color:#B8880A;letter-spacing:3px;font-family:Arial,sans-serif;margin-bottom:10px;">RULE OF LAW CLUB OF MAKERERE PRESENTS</div>
+      <div class="big-title">This Week's<br>Quiz.</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p>Ten questions covering constitutional law, statute, case law, history, and doctrine. You have 50 seconds once you begin, and the quiz ends if you leave this screen before finishing.</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+        <div class="timer-wrap">
+          <div class="timer-label">TIME LEFT</div>
+          <div class="timer" id="timerDisplay">0:50</div>
+        </div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- FORFEIT -->
+  <div class="forfeit" id="forfeit">
+    <div class="forfeit-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="title" id="forfeitTitle">Quiz Forfeited</div>
+    </div>
+    <div class="forfeit-body">
+      <p id="forfeitText">You left the quiz before finishing, so this attempt has ended. Reload the page to try again from question one.</p>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "Article 21(3) of the Constitution lists several prohibited grounds of discrimination (sex, race, colour, ethnic origin, tribe, birth, creed or religion, social or economic standing, political opinion, and disability). The Supreme Court has held by majority that this list does NOT extend to discrimination on which ground, since it is not expressly mentioned?",
+    options: ["Age", "Nationality", "Marital status", "Language"],
+    answer: 0,
+    explanation: "The Supreme Court has held by majority that Article 21(3) does not prohibit discrimination on the ground of age, since age does not appear among the grounds expressly listed in that clause. This has been a point of debate given the broader affirmative action provisions elsewhere in the Constitution that do reference age."
+  },
+  {
+    q: "Under Section 58(3) of the Employment Act, 2006, what is the minimum notice period an employer must give an employee who has served for more than five years but less than ten years?",
+    options: ["1 month", "2 months", "3 months", "2 weeks"],
+    answer: 1,
+    explanation: "Section 58(3) sets a sliding scale of minimum notice: two weeks for service of six months to a year, one month for one to five years, two months for five to ten years, and three months for ten years or more. An employer may always give payment in lieu of notice instead."
+  },
+  {
+    q: "Under the Companies Act, 2012, what is the minimum number of persons required to form a private company in Uganda?",
+    options: ["Two", "Seven", "One", "Fifty"],
+    answer: 2,
+    explanation: "The Companies Act, 2012 introduced single-member companies, allowing one person to form a private company, a significant change from the previous requirement of at least two members. A single-member company must nominate a nominee director and an alternate nominee director."
+  },
+  {
+    q: "In Attorney General v Salvatori Abuki, the Constitutional Court held that an order banishing a convicted person from their home area for ten years, made under the Witchcraft Act, was unconstitutional mainly because it violated the protection against:",
+    options: ["Unlawful search and seizure", "Arbitrary deprivation of property", "Double jeopardy", "Cruel, inhuman, or degrading treatment or punishment"],
+    answer: 3,
+    explanation: "The Constitutional Court held that the ten year exclusion order under section 7 of the Witchcraft Act contravened Articles 24 and 44, which prohibit cruel, inhuman, or degrading treatment or punishment and list that protection as non-derogable even in emergencies."
+  },
+  {
+    q: "In which year did the British government first declare a Protectorate over Buganda, the foundation of what became the Uganda Protectorate?",
+    options: ["1894", "1896", "1900", "1962"],
+    answer: 0,
+    explanation: "On 18 June 1894, the British government declared Buganda a Protectorate. The Protectorate was extended in 1896 to cover Bunyoro, Toro, and Ankole, and the 1900 Buganda Agreement later formalised Buganda's status and land arrangements within it."
+  },
+  {
+    q: "Which maxim holds that the meaning of an ambiguous word can be understood by looking at the words that surround it, since \"a word is known by the company it keeps\"?",
+    options: ["Ejusdem generis", "Noscitur a sociis", "Expressio unius est exclusio alterius", "Contra proferentem"],
+    answer: 1,
+    explanation: "Noscitur a sociis means a word is known by its associates. Courts use it to resolve an ambiguous term by reading it alongside the surrounding words in the same provision, rather than interpreting it in isolation."
+  },
+  {
+    q: "Which maxim provides that an ambiguous term in a contract should be construed against the party who drafted it?",
+    options: ["Caveat emptor", "Ejusdem generis", "Contra proferentem", "Noscitur a sociis"],
+    answer: 2,
+    explanation: "Contra proferentem means against the offeror. Where a contract term is genuinely ambiguous, courts resolve the ambiguity against the interests of the party who drafted or supplied it, on the reasoning that the drafter had the chance to make its meaning clear."
+  },
+  {
+    q: "Which judge delivered the \"golden thread\" speech in Woolmington v DPP (1935), establishing that the burden of proving guilt rests throughout with the prosecution?",
+    options: ["Lord Atkin", "Lord Hewart", "Lord Denning", "Viscount Sankey"],
+    answer: 3,
+    explanation: "Viscount Sankey, delivering the leading judgment, held that one golden thread runs through English criminal law: it is the duty of the prosecution to prove the accused's guilt, subject only to the defence of insanity and any statutory exception."
+  },
+  {
+    q: "Under Article 38 of the Statute of the International Court of Justice, which of the following is treated as a merely \"subsidiary means\" for determining rules of law, rather than a primary source?",
+    options: ["Judicial decisions and the teachings of highly qualified publicists", "International conventions", "International custom", "General principles of law recognised by civilised nations"],
+    answer: 0,
+    explanation: "Article 38(1) lists international conventions, custom, and general principles as the primary sources the Court applies, while judicial decisions and the teachings of highly qualified publicists are listed separately in Article 38(1)(d) as merely subsidiary means for determining rules of law."
+  },
+  {
+    q: "On which date did Uganda gain independence from Britain?",
+    options: ["8 October 1962", "9 October 1962", "1 October 1962", "9 October 1963"],
+    answer: 1,
+    explanation: "Uganda became independent on 9 October 1962, with Milton Obote as the country's first Prime Minister and the Kabaka of Buganda, Sir Edward Mutesa II, as ceremonial President. Uganda became a republic a year later, in October 1963."
+  }
+];
+
+const TOTAL_SECONDS = 50;
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+let timeLeft = TOTAL_SECONDS;
+let timerInterval = null;
+let quizActive = false;
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  quizActive = true;
+  startTimer();
+  loadQuestion();
+
+  document.addEventListener('visibilitychange', handleLeave);
+  window.addEventListener('pagehide', handleLeave);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+}
+
+function startTimer() {
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      forfeitQuiz("Time's Up", "The 50 second timer ran out before you finished. Reload the page to try again from question one.");
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(timeLeft / 60);
+  const s = timeLeft % 60;
+  const el = document.getElementById('timerDisplay');
+  el.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+  el.classList.toggle('low', timeLeft <= 15);
+}
+
+function handleLeave() {
+  if (quizActive && document.hidden) {
+    forfeitQuiz("Quiz Forfeited", "You left the quiz before finishing, so this attempt has ended. Reload the page to try again from question one.");
+  }
+}
+
+function handleBeforeUnload(e) {
+  if (quizActive) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+}
+
+function forfeitQuiz(title, text) {
+  if (!quizActive) return;
+  quizActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('forfeitTitle').textContent = title;
+  document.getElementById('forfeitText').textContent = text;
+  document.getElementById('forfeit').classList.add('show');
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  container.className = 'options';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  quizActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
