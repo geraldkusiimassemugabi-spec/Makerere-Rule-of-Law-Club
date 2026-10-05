@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly Quiz - Rule of Law Club of Makerere</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Georgia, serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .card {
+    max-width: 580px;
+    width: 100%;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 2px 20px rgba(45,0,96,0.12);
+  }
+
+  /* Header */
+  .header {
+    background: #2D0060;
+    padding: 20px 28px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 3px; }
+  .header-left .motto { font-size: 11px; color: rgba(255,255,255,0.6); font-style: italic; }
+  .header-right { text-align: right; }
+  .header-right .count { font-size: 24px; font-weight: bold; color: white; line-height: 1; font-family: Arial, sans-serif; }
+  .header-right .count span { font-size: 13px; color: rgba(255,255,255,0.5); font-weight: normal; }
+  .header-right .score-label { font-size: 10px; color: #B8880A; letter-spacing: 1px; font-family: Arial, sans-serif; margin-top: 3px; }
+
+  /* Progress */
+  .progress-bar { height: 3px; background: #F3EBF9; }
+  .progress-fill { height: 100%; background: #B8880A; transition: width 0.4s ease; }
+
+  /* Body */
+  .body { padding: 28px 28px 20px; }
+  .q-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 14px; }
+  .question { font-size: 17px; color: #2D0060; line-height: 1.65; margin-bottom: 24px; }
+
+  /* Options */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    background: white;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 2px;
+    padding: 13px 16px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: Georgia, serif;
+    font-size: 14px;
+    color: #333;
+    transition: all 0.2s;
+    width: 100%;
+  }
+  .option:hover:not(:disabled) { border-color: #2D0060; background: #F3EBF9; }
+  .option:disabled { cursor: default; }
+  .option.correct { background: #f0faf0; border-color: #4caf50; color: #2e7d32; }
+  .option.wrong { background: #fff5f5; border-color: #ef5350; color: #c62828; }
+  .option.faded { color: #ccc; border-color: #f0f0f0; }
+
+  .dot {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid #ccc;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-family: Arial, sans-serif; color: white;
+    transition: all 0.2s;
+  }
+  .dot.correct-dot { border-color: #4caf50; background: #4caf50; }
+  .dot.wrong-dot { border-color: #ef5350; background: #ef5350; }
+
+  /* Explanation */
+  .explanation {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #F3EBF9;
+    border-left: 3px solid #B8880A;
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .explanation .ex-label { font-size: 10px; color: #B8880A; letter-spacing: 2px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .explanation p { font-size: 13px; color: #444; line-height: 1.65; }
+
+  /* Next button */
+  .btn-wrap { padding: 0 28px 28px; }
+  .btn-next {
+    width: 100%; background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 13px; font-size: 12px;
+    font-family: Arial, sans-serif; letter-spacing: 1.5px;
+    cursor: pointer; display: none; margin-top: 16px;
+    transition: background 0.2s;
+  }
+  .btn-next:hover { background: #1a003a; }
+  .btn-next.show { display: block; }
+
+  /* Footer */
+  .footer {
+    border-top: 3px solid #B8880A;
+    padding: 10px 28px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .footer span { font-size: 9px; color: #ccc; font-family: Arial, sans-serif; letter-spacing: 1px; }
+
+  /* Results screen */
+  .results { display: none; }
+  .results.show { display: block; }
+  .quiz-screen { display: block; }
+  .quiz-screen.hide { display: none; }
+
+  .results-header {
+    background: #2D0060;
+    padding: 28px 32px 24px;
+    text-align: center;
+  }
+  .results-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .results-header .motto { font-size: 12px; color: rgba(255,255,255,0.65); font-style: italic; }
+
+  .results-body { padding: 36px 32px 28px; text-align: center; }
+  .big-score { font-size: 56px; font-weight: bold; color: #2D0060; line-height: 1; font-family: Arial, sans-serif; }
+  .out-of { font-size: 14px; color: #aaa; font-family: Arial, sans-serif; margin-bottom: 24px; }
+  .score-bar-wrap { background: #F3EBF9; border-radius: 2px; height: 8px; margin-bottom: 28px; }
+  .score-bar-fill { height: 100%; background: #B8880A; border-radius: 2px; transition: width 1s ease; }
+  .score-msg { font-size: 16px; color: #2D0060; font-style: italic; margin-bottom: 32px; line-height: 1.5; }
+  .dots-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 32px; }
+  .result-dot {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-family: Arial, sans-serif;
+  }
+  .result-dot.c { background: #B8880A; color: white; }
+  .result-dot.w { background: #e0e0e0; color: #bbb; }
+
+  /* Intro screen */
+  .intro { display: block; }
+  .intro.hide { display: none; }
+  .intro-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .intro-header .badge {
+    display: inline-block; font-size: 10px; color: #2D0060; background: #B8880A;
+    letter-spacing: 2px; font-family: Arial, sans-serif; font-weight: bold;
+    padding: 4px 12px; border-radius: 12px; margin-bottom: 14px;
+  }
+  .intro-header .big-title { font-size: 28px; color: white; font-weight: bold; line-height: 1.2; margin-bottom: 6px; }
+  .intro-header .sub { font-size: 13px; color: rgba(255,255,255,0.65); font-style: italic; }
+  .intro-body { padding: 32px; text-align: center; }
+  .intro-body .hook {
+    font-size: 16px; color: #2D0060; line-height: 1.6; margin-bottom: 14px;
+    font-style: italic;
+  }
+  .intro-body p { font-size: 14px; color: #444; line-height: 1.7; margin-bottom: 28px; }
+  .intro-body .meta { font-size: 12px; color: #aaa; font-family: Arial, sans-serif; letter-spacing: 1px; margin-bottom: 28px; }
+  .btn-start {
+    background: #2D0060; color: white; border: none;
+    border-radius: 2px; padding: 14px 40px;
+    font-size: 13px; font-family: Arial, sans-serif;
+    letter-spacing: 1.5px; cursor: pointer;
+  }
+  .btn-start:hover { background: #1a003a; }
+
+  /* Forfeit screen */
+  .forfeit { display: none; }
+  .forfeit.show { display: block; }
+  .forfeit-header { background: #2D0060; padding: 32px 32px 28px; text-align: center; }
+  .forfeit-header .club { font-size: 10px; color: #B8880A; letter-spacing: 3px; font-family: Arial, sans-serif; margin-bottom: 6px; }
+  .forfeit-header .title { font-size: 24px; color: white; font-weight: bold; }
+  .forfeit-body { padding: 36px 32px; text-align: center; }
+  .forfeit-body p { font-size: 14px; color: #444; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- INTRO -->
+  <div class="intro" id="intro">
+    <div class="intro-header">
+      <div class="badge">SCENARIO EDITION</div>
+      <div class="big-title">This Week's<br>Quiz.</div>
+      <div class="sub">In lege Speramus</div>
+    </div>
+    <div class="intro-body">
+      <p class="hook">"The shopkeeper swears he isn't bound to sell at the price on the tag. Is he right?"</p>
+      <p>Ten real-world scenarios this week, not just facts to recall. Read the situation, pick the correct legal outcome, and the quiz ends if you leave this screen before finishing.</p>
+      <div class="meta">10 QUESTIONS &nbsp;·&nbsp; MULTIPLE CHOICE &nbsp;·&nbsp; EXPLANATIONS INCLUDED</div>
+      <button class="btn-start" onclick="startQuiz()">BEGIN QUIZ</button>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz-screen hide" id="quizScreen">
+    <div class="header">
+      <div class="header-left">
+        <div class="club">RULE OF LAW CLUB</div>
+        <div class="motto">In lege Speramus</div>
+      </div>
+      <div class="header-right">
+        <div class="count" id="qCount">1<span>/10</span></div>
+        <div class="score-label" id="scoreLabel">0 CORRECT</div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+    <div class="body">
+      <div class="q-label" id="qLabel">QUESTION 1</div>
+      <div class="question" id="questionText"></div>
+      <div class="options" id="optionsContainer"></div>
+      <div class="explanation" id="explanation">
+        <div class="ex-label">EXPLANATION</div>
+        <p id="explanationText"></p>
+      </div>
+    </div>
+
+    <div class="btn-wrap">
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">NEXT QUESTION</button>
+    </div>
+
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- FORFEIT -->
+  <div class="forfeit" id="forfeit">
+    <div class="forfeit-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="title" id="forfeitTitle">Quiz Forfeited</div>
+    </div>
+    <div class="forfeit-body">
+      <p id="forfeitText">You left the quiz before finishing, so this attempt has ended. Reload the page to try again from question one.</p>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <div class="club">RULE OF LAW CLUB OF MAKERERE</div>
+      <div class="motto">In lege Speramus</div>
+    </div>
+    <div class="results-body">
+      <div class="big-score" id="finalScore">0</div>
+      <div class="out-of">out of 10</div>
+      <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBarFill" style="width:0%"></div></div>
+      <div class="score-msg" id="scoreMsg"></div>
+      <div class="dots-row" id="dotsRow"></div>
+    </div>
+    <div class="footer">
+      <span>MAKERERE SCHOOL OF LAW</span>
+      <span>@MakRuleofLaw</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  {
+    q: "A throws a stone at B intending to hit B, but misses and the stone strikes C instead, injuring C. Under the doctrine of transferred malice, A's liability for injuring C is:",
+    options: ["The same as if A had intended to injure C", "Limited to a civil claim only, since A had no intent toward C", "Excused, since A's intent was directed at a different person", "Reduced to a lesser offence because the harm was unintended"],
+    answer: 0,
+    explanation: "Under transferred malice, A's criminal intent toward B transfers to C, the actual victim, so long as the harm caused is of the same kind as that intended. A is treated as if the original intent had been directed at C. The doctrine only transfers malice between the same category of offence, so intent to harm a person cannot transfer to a charge of criminal damage to property, or vice versa."
+  },
+  {
+    q: "A shop displays a jacket in its window with a price tag reading UGX 150,000. A customer enters and insists the shop is legally bound to sell at that price, since the display constitutes an offer. Applying the principle in Fisher v Bell, is the customer correct?",
+    options: ["Yes, the display is a binding offer the shop must honour", "No, a window display with a price tag is only an invitation to treat, not an offer", "Yes, but only if the item is still in the window when payment is tendered", "No, because contracts for goods above a certain value must be in writing"],
+    answer: 1,
+    explanation: "In Fisher v Bell (1961), the court held that displaying goods with a price tag in a shop window is merely an invitation to treat, an invitation for customers to make an offer, not an offer in itself. The shopkeeper remains free to accept or reject any offer a customer makes, and is not obliged to sell at the displayed price."
+  },
+  {
+    q: "A delivery company's driver, while making deliveries during normal working hours, drives negligently and injures a pedestrian. The pedestrian wishes to sue the delivery company rather than the driver personally. Under the doctrine of vicarious liability, can the company be held liable?",
+    options: ["No, only the driver who caused the harm can be sued", "No, unless the company itself was separately negligent", "Yes, because the negligent act occurred in the course of the driver's employment", "Yes, but only if the company expressly authorised reckless driving"],
+    answer: 2,
+    explanation: "Under vicarious liability, an employer is held responsible for torts committed by an employee acting within the course and scope of their employment, even without any separate fault on the employer's part. Since the driver was carrying out deliveries during normal working hours, the negligent act falls within the course of employment, and the company can be sued directly."
+  },
+  {
+    q: "X is charged with murder, an offence triable only by the High Court, and has been held on remand for 180 days without being committed for trial. Under Article 23(6)(c) of the Constitution, X is entitled to:",
+    options: ["Automatic acquittal of the charge", "An order of habeas corpus only", "A reduction of the charge to manslaughter", "Release on bail on such conditions as the court considers reasonable"],
+    answer: 3,
+    explanation: "Article 23(6)(c) provides that a person remanded for an offence triable only by the High Court must be released on bail, on reasonable conditions, if they have not been committed for trial within 180 days. The Constitutional Court has held that once this threshold is met, the court has no discretion to refuse bail; it becomes mandatory."
+  },
+  {
+    q: "A person has occupied and developed registered land unchallenged by the owner for over twelve years, but this occupation only began in 2010, well after the Constitution came into force. Under Section 29 of the Land Act, 1998, can this person be classified as a \"bona fide occupant\"?",
+    options: ["No, because bona fide occupant status under section 29(2) requires the qualifying occupation to have begun before the Constitution came into force in 1995", "Yes, since any unchallenged 12-year occupation automatically qualifies", "Yes, but only with written consent from the registered owner", "No, because bona fide occupant status applies only to mailo land"],
+    answer: 0,
+    explanation: "Section 29(2) defines a bona fide occupant as a person who, before the coming into force of the Constitution on 8 October 1995, had occupied and utilised land unchallenged for twelve years or more, or had been settled on it by the Government. A twelve-year occupation that only began in 2010 does not meet this definition, however long it continues; such an occupant instead falls under the mediation process in section 30 for those who do not qualify as bona fide occupants."
+  },
+  {
+    q: "A company allows its branch manager to regularly negotiate and sign supply contracts on its behalf, even though the manager's written contract limits them to approving orders below a set value. A supplier, unaware of this internal limit, signs a large contract with the manager in good faith. Under the doctrine of ostensible authority, is the company bound?",
+    options: ["No, because the manager exceeded their actual authority", "Yes, because the company's conduct represented to the supplier that the manager had authority to act", "No, since written limits in an employment contract always bind third parties", "Yes, but only if the supplier had previously dealt with the company"],
+    answer: 1,
+    explanation: "Ostensible, or apparent, authority arises where a principal's conduct, such as consistently permitting an agent to negotiate and sign contracts, leads a third party to reasonably believe the agent has authority to act, even where actual authority was limited. The company is bound because its own conduct created that impression, and an uncommunicated internal restriction cannot be used against an innocent third party who relied on it in good faith."
+  },
+  {
+    q: "In a civil trial, a witness testifies: \"My neighbour told me she saw the defendant's car at the scene,\" and this is offered to prove that the defendant's car was indeed at the scene. Applying the general rule against hearsay, is this testimony admissible?",
+    options: ["Yes, since any firsthand account of what someone said is reliable", "Yes, provided the neighbour is unavailable to testify", "Generally no, because it is an out-of-court statement offered to prove the truth of what it asserts", "No, but only because neighbours are not credible witnesses"],
+    answer: 2,
+    explanation: "Hearsay is an out-of-court statement repeated in court to prove the truth of what it asserts, and it is generally excluded because the original speaker cannot be cross-examined on its accuracy. Here, the witness is not reporting what they themselves saw, but what their neighbour claimed to have seen, so the statement is hearsay unless it falls within a recognised exception."
+  },
+  {
+    q: "An unmarried couple buys a home registered solely in the man's name. The woman contributes a substantial share of the purchase price over several years but is not on the title. If the relationship ends, can she claim a beneficial interest in the property?",
+    options: ["No, since only the person named on the title can hold any interest", "No, unless the couple were legally married", "Yes, but only if a written trust document was signed at purchase", "Yes, she may establish a beneficial interest under a constructive trust based on her financial contributions"],
+    answer: 3,
+    explanation: "Equity recognises that legal title and beneficial ownership can diverge. Where a cohabiting partner who is not on the title has made substantial financial contributions, such as to the purchase price or mortgage, with a shared intention to own the property jointly, the courts can impose a constructive trust giving them a beneficial interest proportionate to that contribution, even without any written agreement."
+  },
+  {
+    q: "A company's auditors prepare the firm's annual accounts, required by law to be sent to existing shareholders. A member of the public, not yet a shareholder, reads the published accounts, buys shares in reliance on them, and takes over the company, before discovering the accounts had negligently overstated profits. Applying the three-part test from Caparo Industries v Dickman, which element would most likely be missing for this investor to establish a duty of care against the auditors?",
+    options: ["Proximity between the auditors and this particular investor", "Foreseeability that someone might read the accounts", "The existence of an audit report at all", "The auditors' professional qualification"],
+    answer: 0,
+    explanation: "In Caparo itself, the House of Lords held that statutory accounts are prepared for the body of existing shareholders as a class, so they can exercise their rights as owners of the company, not to guide outside members of the public deciding whether to invest or take over the business. Even though some harm to investors generally was foreseeable, there was no relationship of proximity between the auditors and this particular investor, so no duty of care arose."
+  },
+  {
+    q: "A concert hall is hired for a series of performances. Before the first performance, the hall burns down due to an accidental fire, through no fault of either party. Applying the doctrine established in Taylor v Caldwell, what is the effect on the contract?",
+    options: ["The hirer may still sue for breach of contract", "The contract is automatically discharged by frustration, releasing both parties from further obligations", "The owner must find a substitute venue at their own expense", "The contract remains enforceable since fire risk should have been insured against"],
+    answer: 1,
+    explanation: "Taylor v Caldwell established the doctrine of frustration: where the continued existence of specific subject matter is essential to a contract's performance, its accidental destruction, without either party's fault, discharges both parties from further obligations. Since the music hall's destruction made the agreed performances impossible, neither side could be held liable for failing to go ahead."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+let results = [];
+let quizActive = false;
+
+function startQuiz() {
+  document.getElementById('intro').classList.add('hide');
+  document.getElementById('quizScreen').classList.remove('hide');
+  quizActive = true;
+  loadQuestion();
+
+  document.addEventListener('visibilitychange', handleLeave);
+  window.addEventListener('pagehide', handleLeave);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+}
+
+function handleLeave() {
+  if (quizActive && document.hidden) {
+    forfeitQuiz("Quiz Forfeited", "You left the quiz before finishing, so this attempt has ended. Reload the page to try again from question one.");
+  }
+}
+
+function handleBeforeUnload(e) {
+  if (quizActive) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+}
+
+function forfeitQuiz(title, text) {
+  if (!quizActive) return;
+  quizActive = false;
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('forfeitTitle').textContent = title;
+  document.getElementById('forfeitText').textContent = text;
+  document.getElementById('forfeit').classList.add('show');
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  answered = false;
+
+  document.getElementById('qCount').innerHTML = `${current + 1}<span>/${questions.length}</span>`;
+  document.getElementById('qLabel').textContent = `QUESTION ${current + 1}`;
+  document.getElementById('questionText').textContent = q.q;
+  document.getElementById('progressFill').style.width = `${(current / questions.length) * 100}%`;
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+
+  const container = document.getElementById('optionsContainer');
+  container.innerHTML = '';
+  container.className = 'options';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="dot" id="dot-${i}"></span>${opt}`;
+    btn.onclick = () => selectAnswer(i);
+    container.appendChild(btn);
+  });
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('btnNext').textContent = current + 1 >= questions.length ? 'SEE RESULTS' : 'NEXT QUESTION';
+}
+
+function selectAnswer(selected) {
+  if (answered) return;
+  answered = true;
+
+  const q = questions[current];
+  const options = document.querySelectorAll('.option');
+  const correct = selected === q.answer;
+  if (correct) score++;
+  results.push(correct);
+
+  options.forEach((btn, i) => {
+    btn.disabled = true;
+    const dot = document.getElementById(`dot-${i}`);
+    if (i === q.answer) {
+      btn.classList.add('correct');
+      dot.classList.add('correct-dot');
+      dot.textContent = '✓';
+    } else if (i === selected) {
+      btn.classList.add('wrong');
+      dot.classList.add('wrong-dot');
+      dot.textContent = '✗';
+    } else {
+      btn.classList.add('faded');
+    }
+  });
+
+  document.getElementById('explanationText').textContent = q.explanation;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('btnNext').classList.add('show');
+  document.getElementById('scoreLabel').textContent = `${score} CORRECT`;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) {
+    showResults();
+  } else {
+    loadQuestion();
+  }
+}
+
+function showResults() {
+  quizActive = false;
+  document.getElementById('quizScreen').classList.add('hide');
+  document.getElementById('results').classList.add('show');
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('progressFill').style.width = '100%';
+
+  setTimeout(() => {
+    document.getElementById('scoreBarFill').style.width = `${(score / questions.length) * 100}%`;
+  }, 100);
+
+  const msgs = {
+    10: "Ten out of ten. The bench awaits you.",
+    9: "Nine out of ten. That is exam-grade recall.",
+    8: "Eight out of ten. You clearly do the reading.",
+    7: "Seven out of ten. Respectable, and still room to grow.",
+    6: "Six out of ten. You know your way around, mostly.",
+    5: "Five out of ten. Time to open the case law again.",
+    0: "Every great advocate started somewhere. Back to the books."
+  };
+  const key = score >= 9 ? score : score >= 7 ? 7 : score >= 5 ? 5 : 0;
+  document.getElementById('scoreMsg').textContent = msgs[score] || msgs[key];
+
+  const dotsRow = document.getElementById('dotsRow');
+  dotsRow.innerHTML = '';
+  results.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = `result-dot ${r ? 'c' : 'w'}`;
+    d.textContent = r ? '✓' : '✗';
+    dotsRow.appendChild(d);
+  });
+}
+</script>
+</body>
+</html>
